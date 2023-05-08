@@ -1,4 +1,9 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadGatewayException,
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { Model } from 'mongoose';
@@ -6,6 +11,8 @@ import { User } from './schemas/user.schema';
 import { InjectModel } from '@nestjs/mongoose';
 import { AddToFriendsDto } from './dto/add-to-freinds.dto';
 import { RemoveFriendDto } from './dto/remove-freind.dto';
+import * as fs from 'fs';
+import * as path from 'path';
 
 @Injectable()
 export class UserService {
@@ -44,8 +51,7 @@ export class UserService {
   }
 
   async update(id: string, updateUserDto: UpdateUserDto) {
-    await this.findOne(id);
-
+    // await this.findOne(id);
     return this.userModel.findByIdAndUpdate(id, updateUserDto, { new: true }).exec();
   }
 
@@ -85,6 +91,22 @@ export class UserService {
     await Promise.all([user.save(), friend.save()]);
 
     return user;
+  }
+
+  async uploadAvatar(userId: string, file: string): Promise<User> {
+    const user = await this.findOne(userId);
+
+    if (user.avatar) {
+      const oldPath = path.resolve(user.avatar);
+
+      if (fs.existsSync(oldPath)) {
+        fs.unlink(oldPath, (err) => {
+          if (err) throw new BadGatewayException('Что-то пошло не так');
+        });
+      }
+    }
+
+    return this.update(userId, { avatar: file });
   }
 
   private checkIsFriend(user: User, potentialFriend: User): boolean {
