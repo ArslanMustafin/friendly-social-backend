@@ -12,15 +12,16 @@ import {
   Res,
   BadRequestException,
   Req,
+  UseGuards,
 } from '@nestjs/common';
 import { UserService } from './user.service';
-import { CreateUserDto } from './dto/create-user.dto';
+import { RegisterUserDto } from './dto/register-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { ApiBody, ApiConsumes, ApiTags } from '@nestjs/swagger';
 import { AddToFriendsDto } from './dto/add-to-freinds.dto';
 import { RemoveFriendDto } from './dto/remove-freind.dto';
-import { User } from './schemas/user.schema';
 import { ALLOWED_MIME_TYPES, FileValidationErrors } from 'src/utils/configs/multer';
+import { AuthGuard } from '@nestjs/passport';
 
 @ApiTags('user')
 @Controller('user')
@@ -28,11 +29,12 @@ export class UserController {
   constructor(private readonly userService: UserService) {}
 
   @Post()
-  create(@Body() createUserDto: CreateUserDto) {
-    return this.userService.create(createUserDto);
+  create(@Body() registerUserDto: RegisterUserDto) {
+    return this.userService.create(registerUserDto);
   }
 
   @Get()
+  @UseGuards(AuthGuard('jwt'))
   findAll() {
     return this.userService.findAll();
   }

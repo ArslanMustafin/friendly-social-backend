@@ -10,5 +10,6 @@ import { avatarsMulterConfig } from 'src/utils/configs/multer';
   imports: [MulterModule.register(avatarsMulterConfig), MongooseModule.forFeature([UserModel])],
   controllers: [UserController],
   providers: [UserService],
+  exports: [UserService],
 })
 export class UserModule {}

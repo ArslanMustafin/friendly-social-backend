@@ -4,28 +4,32 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { CreateUserDto } from './dto/create-user.dto';
+import { RegisterUserDto } from './dto/register-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { Model } from 'mongoose';
 import { User } from './schemas/user.schema';
 import { InjectModel } from '@nestjs/mongoose';
+
 import { AddToFriendsDto } from './dto/add-to-freinds.dto';
 import { RemoveFriendDto } from './dto/remove-freind.dto';
+import { LoginUserDto } from './dto/login-user.dto';
+
 import * as fs from 'fs';
 import * as path from 'path';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class UserService {
   constructor(@InjectModel(User.name) private userModel: Model<User>) {}
 
-  async create(createUserDto: CreateUserDto) {
-    const existingUser = await this.userModel.findOne({ email: createUserDto.email }).exec();
+  async create(registerUserDto: RegisterUserDto) {
+    const existingUser = await this.userModel.findOne({ email: registerUserDto.email }).exec();
 
     if (existingUser) {
       throw new BadRequestException('Пользователь c таким email уже существует!');
     }
 
-    const createdUser = new this.userModel(createUserDto);
+    const createdUser = new this.userModel(registerUserDto);
 
     return createdUser.save();
   }
@@ -45,13 +49,10 @@ export class UserService {
   async findByEmail(email: string) {
     const user = await this.userModel.findOne({ email }).exec();
 
-    if (!user) throw new NotFoundException('Пользователь на найден!');
-
     return user;
   }
 
   async update(id: string, updateUserDto: UpdateUserDto) {
-    // await this.findOne(id);
     return this.userModel.findByIdAndUpdate(id, updateUserDto, { new: true }).exec();
   }
 
@@ -107,6 +108,22 @@ export class UserService {
     }
 
     return this.update(userId, { avatar: file });
+  }
+
+  async loginUser(loginUserDto: LoginUserDto) {
+    const { email, password } = loginUserDto;
+
+    const user = await this.findByEmail(email);
+
+    if (!user) throw new NotFoundException('Пользователь c таким email на найден!');
+
+    const isComparePassword = await bcrypt.compare(password, user.password);
+
+    if (!isComparePassword) {
+      throw new BadRequestException('Неправильный пароль');
+    }
+
+    return user;
   }
 
   private checkIsFriend(user: User, potentialFriend: User): boolean {
