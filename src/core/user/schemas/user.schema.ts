@@ -2,6 +2,7 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import mongoose, { HydratedDocument } from 'mongoose';
 import * as bcrypt from 'bcrypt';
 import { SALT_NUMBER } from 'src/utils/contants';
+import { Post } from 'src/core/posts/schemas/post.schema';
 
 export type UserDocumentType = HydratedDocument<User>;
 
@@ -41,6 +42,9 @@ export class User {
 
   @Prop({ type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }], default: [] })
   friends: User[];
+
+  @Prop({ type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Post' }], default: [] })
+  posts: Post[];
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

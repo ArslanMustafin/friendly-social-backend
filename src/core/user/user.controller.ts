@@ -39,31 +39,37 @@ export class UserController {
     return this.userService.findAll();
   }
 
+  @UseGuards(AuthGuard('jwt'))
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.userService.findOne(id);
   }
 
+  @UseGuards(AuthGuard('jwt'))
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
     return this.userService.update(id, updateUserDto);
   }
 
+  @UseGuards(AuthGuard('jwt'))
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.userService.remove(id);
   }
 
+  @UseGuards(AuthGuard('jwt'))
   @Post('friend')
   addToFriend(@Body() addToFriendsDto: AddToFriendsDto) {
     return this.userService.addToFriends(addToFriendsDto);
   }
 
+  @UseGuards(AuthGuard('jwt'))
   @Post('friend/remove')
   deleteToFriend(@Body() removeFriendDto: RemoveFriendDto) {
     return this.userService.removeFriend(removeFriendDto);
   }
 
+  @UseGuards(AuthGuard('jwt'))
   @Post(':id/avatar')
   @ApiConsumes('multipart/form-data')
   @ApiBody({
