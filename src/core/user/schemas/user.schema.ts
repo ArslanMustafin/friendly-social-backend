@@ -65,6 +65,14 @@ UserSchema.pre('save', async function (next) {
   }
 });
 
+UserSchema.pre(['find', 'findOne'], function (next) {
+  this.populate({
+    path: 'posts',
+    options: { sort: { createdAt: 'desc' } },
+  });
+  next();
+});
+
 UserSchema.methods.toJSON = function () {
   const userObject = this.toObject();
   delete userObject.password;

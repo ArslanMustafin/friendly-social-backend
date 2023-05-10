@@ -22,7 +22,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
      */
     const responseMessage = (type: string, message: string) => {
       response.status(status).json({
-        status,
+        statusCode: status,
         type,
         message,
       });

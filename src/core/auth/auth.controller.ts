@@ -1,10 +1,11 @@
-import { Body, Controller, Post } from '@nestjs/common';
+import { Body, Controller, Get, Post, UseGuards, Request } from '@nestjs/common';
 import { UserService } from '../user/user.service';
 import { AuthService } from './auth.service';
 import { RegisterUserDto } from '../user/dto/register-user.dto';
 import { LoginUserDto } from '../user/dto/login-user.dto';
 import { PayloadType } from './types';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { AuthGuard } from '@nestjs/passport';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -34,5 +35,12 @@ export class AuthController {
     const token = await this.authService.signPayload(payload);
 
     return { user, token };
+  }
+
+  @UseGuards(AuthGuard('jwt'))
+  @ApiBearerAuth()
+  @Get('profile')
+  getProfile(@Request() req) {
+    return this.userService.findOne(req.user._id);
   }
 }

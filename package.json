@@ -5,6 +5,7 @@
   "author": "Arslan Mustafin <arslan.mustafin.dev@gmail.com>",
   "private": true,
   "license": "MIT",
+  
   "scripts": {
     "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",

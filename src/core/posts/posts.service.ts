@@ -15,12 +15,14 @@ export class PostsService {
 
   async create(createPostDto: CreatePostDto) {
     const { authorId, text, image } = createPostDto;
+
     const user = await this.userService.findOne(authorId);
+
     const post = new this.postModel({ text, image, author: user, likes: [] });
 
     await post.save();
 
-    user.posts.push(post);
+    user.posts.push(post.id);
 
     await user.save();
 
@@ -28,13 +30,13 @@ export class PostsService {
   }
 
   findAll() {
-    return this.postModel.find().exec();
+    return this.postModel.find().sort({ createdAt: -1 }).exec();
   }
 
   async findOne(id: string) {
     const post = await this.postModel.findById(id).exec();
 
-    if (!post) throw new NotFoundException('Пользователь на найден!');
+    if (!post) throw new NotFoundException('Пост на найден!');
 
     return post;
   }
@@ -70,6 +72,7 @@ export class PostsService {
 
     if (!likes.includes(userId)) {
       likes.push(userId);
+
       return post.save();
     }
 
@@ -81,7 +84,7 @@ export class PostsService {
 
     const likes = post.likes as string[];
 
-    post.likes = likes.filter((like) => like.toString() !== userId);
+    post.likes = likes.filter((like) => like.toString() !== userId.toString());
 
     return post.save();
   }

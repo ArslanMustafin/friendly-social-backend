@@ -1,3 +1,4 @@
+import { UpdatePostDto } from './../posts/dto/update-post.dto';
 import {
   BadGatewayException,
   BadRequestException,
@@ -53,7 +54,11 @@ export class UserService {
   }
 
   async update(id: string, updateUserDto: UpdateUserDto) {
-    return this.userModel.findByIdAndUpdate(id, updateUserDto, { new: true }).exec();
+    const user = await this.findOne(id);
+
+    Object.assign(user, updateUserDto);
+
+    return user.save();
   }
 
   async remove(id: string) {
@@ -94,7 +99,7 @@ export class UserService {
     return user;
   }
 
-  async uploadAvatar(userId: string, file: string): Promise<User> {
+  async uploadAvatar(userId: string, file: string) {
     const user = await this.findOne(userId);
 
     if (user.avatar) {

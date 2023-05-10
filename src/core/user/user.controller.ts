@@ -17,21 +17,17 @@ import {
 import { UserService } from './user.service';
 import { RegisterUserDto } from './dto/register-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { ApiBody, ApiConsumes, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiBody, ApiConsumes, ApiTags } from '@nestjs/swagger';
 import { AddToFriendsDto } from './dto/add-to-freinds.dto';
 import { RemoveFriendDto } from './dto/remove-freind.dto';
 import { ALLOWED_MIME_TYPES, FileValidationErrors } from 'src/utils/configs/multer';
 import { AuthGuard } from '@nestjs/passport';
 
 @ApiTags('user')
+@ApiBearerAuth()
 @Controller('user')
 export class UserController {
   constructor(private readonly userService: UserService) {}
-
-  @Post()
-  create(@Body() registerUserDto: RegisterUserDto) {
-    return this.userService.create(registerUserDto);
-  }
 
   @Get()
   @UseGuards(AuthGuard('jwt'))
@@ -46,9 +42,9 @@ export class UserController {
   }
 
   @UseGuards(AuthGuard('jwt'))
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
-    return this.userService.update(id, updateUserDto);
+  @Patch()
+  update(@Req() req, @Body() updateUserDto: UpdateUserDto) {
+    return this.userService.update(req.user._id, updateUserDto);
   }
 
   @UseGuards(AuthGuard('jwt'))
@@ -70,7 +66,7 @@ export class UserController {
   }
 
   @UseGuards(AuthGuard('jwt'))
-  @Post(':id/avatar')
+  @Post('avatar')
   @ApiConsumes('multipart/form-data')
   @ApiBody({
     schema: {
@@ -83,12 +79,8 @@ export class UserController {
       },
     },
   })
-  @UseInterceptors(FileInterceptor('file'))
-  async uploadAvatar(
-    @Param('id') userId: string,
-    @UploadedFile() file: Express.Multer.File,
-    @Req() req,
-  ) {
+  @UseInterceptors(FileInterceptor('avatar'))
+  async uploadAvatar(@UploadedFile() file: Express.Multer.File, @Req() req) {
     if (
       req.fileValidationError &&
       req.fileValidationError === FileValidationErrors.UNSUPPORTED_FILE_TYPE
@@ -97,6 +89,6 @@ export class UserController {
         `Разрешены картинки следующих форматов: ${ALLOWED_MIME_TYPES.toString()}`,
       );
     }
-    return this.userService.uploadAvatar(userId, file.path);
+    return this.userService.uploadAvatar(req.user._id, file.path);
   }
 }

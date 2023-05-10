@@ -15,14 +15,13 @@ import {
 import { PostsService } from './posts.service';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
-import { ApiBody, ApiConsumes, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiBody, ApiConsumes, ApiTags } from '@nestjs/swagger';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { FileValidationErrors, ALLOWED_MIME_TYPES } from 'src/utils/configs/multer';
 import { AuthGuard } from '@nestjs/passport';
-import { CreateLikeDto } from './dto/create-like.dto';
-import { RemoveLikeDto } from './dto/remove-like.dto';
 
 @ApiTags('posts')
+@ApiBearerAuth()
 @Controller('posts')
 export class PostsController {
   constructor(private readonly postsService: PostsService) {}
@@ -51,7 +50,7 @@ export class PostsController {
   })
   @UseInterceptors(FileInterceptor('image'))
   create(
-    @Body() createPostDto: CreatePostDto,
+    @Body() { text }: Omit<CreatePostDto, 'authorId'>,
     @UploadedFile() file: Express.Multer.File,
     @Req() req,
   ) {
@@ -64,13 +63,19 @@ export class PostsController {
       );
     }
 
-    return this.postsService.create({ ...createPostDto, image: file.path });
+    return this.postsService.create({ text, authorId: req.user._id, image: file.path });
   }
 
   @Get()
   @UseGuards(AuthGuard('jwt'))
   findAll() {
     return this.postsService.findAll();
+  }
+
+  @Get('user')
+  @UseGuards(AuthGuard('jwt'))
+  findByUser(@Req() req) {
+    return this.postsService.findPostsForFriends(req.user._id);
   }
 
   @Get(':id')
@@ -123,17 +128,17 @@ export class PostsController {
 
   @Post(':postId/like')
   @UseGuards(AuthGuard('jwt'))
-  async likePost(@Param('postId') postId: string, @Body() createLikeDto: CreateLikeDto) {
-    const { userId } = createLikeDto;
+  async likePost(@Param('postId') postId: string, @Req() req) {
+    const { _id } = req.user;
 
-    return this.postsService.addLike(postId, userId);
+    return this.postsService.addLike(postId, _id);
   }
 
   @Delete(':postId/like')
   @UseGuards(AuthGuard('jwt'))
-  async removeLikePost(@Param('postId') postId: string, @Body() removeLikeDto: RemoveLikeDto) {
-    const { userId } = removeLikeDto;
+  async removeLikePost(@Param('postId') postId: string, @Req() req) {
+    const { _id } = req.user;
 
-    return this.postsService.removeLike(postId, userId);
+    return this.postsService.removeLike(postId, _id);
   }
 }
